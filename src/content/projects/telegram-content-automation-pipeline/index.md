@@ -140,8 +140,8 @@ VPS (Ubuntu 24)
     └── Traefik (ports 80/443, auto-cert)
 ```
 
-**Network:** Shared Docker bridge (`n8n_default`)
-**Access:** tg-server reachable from n8n at `http://tg-server:5000`
+- **Network:** Shared Docker bridge (`n8n_default`)
+- **Access:** tg-server reachable from n8n at `http://tg-server:5000`
 
 ## API Reference
 
@@ -158,12 +158,8 @@ All routes accept and return JSON. A 2-hour idempotency cache is active on all P
 
 ## Tech Stack
 
-**Backend:** Python 3.11 · Flask · Waitress · Telethon · SQLite
-
-**AI/NLP:** Anthropic Claude API · faster-whisper · FFmpeg
-
-**Orchestration:** n8n · webhook chains · sub-workflow patterns
-
-**Infrastructure:** Docker · Docker Compose · Traefik · Let's Encrypt · SSH
-
-**Deployment:** VPS (Ubuntu 24) · reverse proxy · HTTPS auto-cert
+- **Backend:** Python 3.11 · Flask · Waitress · Telethon · SQLite
+- **AI/NLP:** Anthropic Claude API · faster-whisper · FFmpeg
+- **Orchestration:** n8n · webhook chains · sub-workflow patterns
+- **Infrastructure:** Docker · Docker Compose · Traefik · Let's Encrypt · SSH
+- **Deployment:** VPS (Ubuntu 24) · reverse proxy · HTTPS auto-cert

@@ -3,10 +3,8 @@ interface Props {
   title: string;
   description?: string;
 }
-
 const { title, description = "Backend & Automation Engineer specialized in Python, n8n, and infrastructure automation." } = Astro.props;
 ---
-
 <!doctype html>
 <html lang="en" class="scroll-smooth">
   <head>
@@ -15,35 +13,60 @@ const { title, description = "Backend & Automation Engineer specialized in Pytho
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    
-    <!-- Fonts -->
+    <meta name="color-scheme" content="dark">
+    <meta name="darkreader-lock">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    
     <title>{title}</title>
   </head>
   <body class="bg-dark-bg text-dark-text font-sans antialiased">
+    <!-- Mouse glow -->
+    <div id="mouse-glow" class="pointer-events-none fixed z-0 opacity-0 transition-opacity duration-500" style="width:600px;height:600px;margin-left:-300px;margin-top:-300px;background:radial-gradient(circle,rgba(16,185,129,0.06) 0%,transparent 70%);border-radius:50%;"></div>
     <slot />
   </body>
 </html>
 
 <style is:global>
+  :root {
+    color-scheme: dark;
+  }
+
   * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
   }
-
   html {
     scroll-behavior: smooth;
   }
-
   body {
     min-height: 100vh;
+    background-color: #0a0a0a;
+    background-image: radial-gradient(#1c1c1c 1px, transparent 1px);
+    background-size: 32px 32px;
   }
-
   code {
     font-family: 'JetBrains Mono', monospace;
   }
 </style>
+
+<script>
+  const glow = document.getElementById('mouse-glow');
+  let visible = false;
+
+  window.addEventListener('mousemove', (e) => {
+    if (!glow) return;
+    glow.style.left = e.clientX + 'px';
+    glow.style.top = e.clientY + 'px';
+    if (!visible) {
+      glow.style.opacity = '1';
+      visible = true;
+    }
+  });
+
+  window.addEventListener('mouseleave', () => {
+    if (glow) glow.style.opacity = '0';
+    visible = false;
+  });
+</script>

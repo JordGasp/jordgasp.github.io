@@ -10,12 +10,12 @@
 
   <div class="relative z-10 max-w-4xl mx-auto text-center">
     <!-- Name -->
-    <h1 class="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-accent-green to-accent-purple bg-clip-text text-transparent py-2">
+    <h1 class="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-accent-green to-accent-purple bg-clip-text text-transparent py-2 fix-dark">
       Jordan Gaspoz
     </h1>
 
     <!-- Title -->
-    <h2 class="text-2xl md:text-3xl font-semibold mb-4 text-dark-text">
+    <h2 class="text-2xl md:text-3xl font-semibold mb-4 text-dark-text fix-dark">
       Backend & Automation Engineer
     </h2>
 
@@ -51,11 +51,11 @@
       </div>
     </div>
 
-    <!-- CTA Buttons -->
+<!-- CTA Buttons -->
     <div class="flex flex-wrap items-center justify-center gap-4">
       <a
         href="#projects"
-        class="px-8 py-3 bg-accent-green hover:bg-accent-green/80 text-dark-bg font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent-green/50"
+        class="px-8 py-3 bg-accent-green hover:bg-accent-green/80 text-dark-bg font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent-green/50 fix-dark"
       >
         View Projects
       </a>
@@ -63,7 +63,7 @@
         href="https://github.com/JordGasp"
         target="_blank"
         rel="noopener noreferrer"
-        class="px-8 py-3 bg-dark-card border-2 border-accent-purple/50 hover:border-accent-purple text-dark-text font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent-purple/30 backdrop-blur-sm"
+        class="px-8 py-3 border border-dark-border hover:border-gray-500 text-gray-400 hover:text-dark-text font-semibold rounded-lg transition-all duration-300 hover:scale-105 backdrop-blur-sm"
       >
         GitHub Profile
       </a>
@@ -82,6 +82,10 @@
 </section>
 
 <style>
+  .fix-dark {
+    forced-color-adjust: none !important;
+  }
+
   @keyframes pulse {
     0%, 100% {
       opacity: 0.2;

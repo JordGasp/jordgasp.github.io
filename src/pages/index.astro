@@ -41,32 +41,53 @@ const sortedProjects = projects.sort((a, b) => a.data.order - b.data.order);
     </div>
   </section>
 
-  <!-- Tech Stack Section -->
+<!-- Core Expertise Section -->
   <section class="py-20 px-4 bg-dark-card/30">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-12">
         <h2 class="text-3xl md:text-4xl font-bold mb-4 text-dark-text">
-          Tech Stack
+          Core Expertise
         </h2>
         <p class="text-gray-400">
-          Technologies I work with on a daily basis
+          Skills and the tools that power them
         </p>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { name: 'Python 3.11', category: 'Language' },
-          { name: 'Flask', category: 'Backend' },
-          { name: 'Telethon', category: 'API Client' },
-          { name: 'n8n', category: 'Orchestration' },
-          { name: 'Docker', category: 'Infrastructure' },
-          { name: 'Claude API', category: 'AI/NLP' },
-          { name: 'PowerShell', category: 'Automation' },
-          { name: 'SQLite', category: 'Database' },
-        ].map((tech) => (
-          <div class="bg-dark-card border border-dark-border rounded-lg p-4 text-center hover:border-accent-green/50 transition-colors duration-300">
-            <p class="font-mono text-sm text-accent-purple mb-1">{tech.category}</p>
-            <p class="text-dark-text font-semibold">{tech.name}</p>
+          {
+            area: 'Infrastructure & Orchestration',
+            description: 'Containerised deployments, workflow automation, and cross-platform scripting for reliable, repeatable ops.',
+            tools: ['Docker', 'n8n', 'Docker Compose', 'PowerShell'],
+            color: 'accent-green',
+          },
+          {
+            area: 'Backend Development',
+            description: 'Lightweight API design, relational data modelling, and server-side automation pipelines.',
+            tools: ['Python 3.11', 'Flask', 'SQLite'],
+            color: 'accent-purple',
+          },
+          {
+            area: 'AI & Integration',
+            description: 'LLM-powered processing chains, Telegram platform integration, and transcription pipelines.',
+            tools: ['Claude API', 'Telethon', 'faster-whisper'],
+            color: 'accent-green',
+          },
+        ].map((expertise) => (
+          <div class="bg-dark-card border border-dark-border rounded-xl p-6 hover:border-accent-green/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-accent-green/5 group">
+            <h3 class={`text-base font-semibold mb-2 text-${expertise.color} group-hover:opacity-100 transition-opacity`}>
+              {expertise.area}
+            </h3>
+            <p class="text-gray-500 text-sm mb-5 leading-relaxed">
+              {expertise.description}
+            </p>
+            <div class="flex flex-wrap gap-2">
+              {expertise.tools.map((tool) => (
+                <span class="px-2.5 py-1 text-xs font-mono bg-dark-bg border border-dark-border rounded-md text-gray-400">
+                  {tool}
+                </span>
+              ))}
+            </div>
           </div>
         ))}
       </div>
