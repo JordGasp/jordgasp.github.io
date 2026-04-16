@@ -1,0 +1,210 @@
+---
+title: "n8n Local Infrastructure Manager"
+tagline: "PowerShell automation tool for local n8n Docker instance management"
+description: "Comprehensive management script for running and maintaining a local n8n Docker instance with automated updates, versioned backups, and one-command restore capabilities."
+tech: ["PowerShell", "Docker", "Docker Compose", "Windows"]
+github: ""
+featured: true
+order: 2
+---
+
+## Overview
+
+A **PowerShell management tool** designed as a local development mirror of a production n8n VPS. It enables safe workflow iteration without touching the live environment, with backup/restore capabilities and intelligent update management.
+
+The script provides a complete lifecycle management solution: from Docker daemon health checks to automated backups with rotation, changelog analysis before updates, and interactive configuration management—all through a single, user-friendly interface.
+
+## Usage
+
+### Interactive Menu
+
+```powershell
+.\n8n-control.ps1
+```
+
+### Silent AutoStart (for Windows Startup)
+
+```powershell
+.\n8n-control.ps1 -AutoStart
+```
+
+### Interactive Menu
+
+<img src="/interactive-menu.png" alt="Interactive menu" width="400"  style="display: block; margin-left: 0; margin-right: auto;" />
+
+## Features
+
+### Start / Stop Management
+
+- **Automatic Docker Desktop launch** if not running
+- **Daemon readiness polling** with timeout (30s max)
+- **Health check wait** via `/healthz` endpoint before browser launch
+- **Stabilization delay** after healthy response (5s)
+
+### Intelligent Update System
+
+- **Automatic update check** on each start via Docker Hub
+- **GitHub changelog diff** with breaking change detection
+- **Pre-update backup** automatically created before applying updates
+- **Selective update** with user confirmation (skipped in AutoStart mode)
+- **Version comparison** between old and new images
+
+### Backup & Restore
+
+- **Versioned ZIP backups** with format: `backup_v{version}_{timestamp}.zip`
+- **Automatic rotation** keeping last N backups (configurable, default: 5)
+- **Pre-update safety backups** before any image update
+- **Scheduled auto-backup** with configurable interval (default: 24h)
+- **Sentinel file tracking** for auto-backup timing
+- **One-command restore** with interactive selection menu
+- **Hot-swap capability** with automatic container stop/start
+
+### Configuration Management
+
+- **Single source of truth**: All settings in `.env` file
+- **Interactive configuration UI** with 11 editable parameters
+- **Hot-reload** of configuration without restart
+- **Validation** of input values before saving
+
+### Operational Tools
+
+- **Live Docker logs** (`docker logs -f` wrapper)
+- **Historical log viewer** with file selection menu
+- **Downgrade capability** to specific n8n versions
+- **Selective backup deletion** or total wipe with double confirmation
+- **AutoStart mode** for Windows Startup folder integration
+
+## Architecture
+
+All configuration lives in a single `.env` file, shared between `docker-compose.yml` and the PowerShell script. No hardcoded paths.
+
+```
+n8n/
+├── scripts/
+│   ├── docker/
+│   │   ├── docker-compose.yml   # n8n container definition
+│   │   └── .env                 # single source of truth
+│   └── n8n-control.ps1          # management script (721 lines)
+├── data/                        # n8n persistent data (Docker volume)
+├── n8n-files/                   # binary file storage
+├── logs/                        # n8n log output
+└── backups/                     # versioned ZIP backups
+```
+
+The script reads all paths, ports, and settings from `.env` at startup and exposes them as PowerShell variables. The `Set-EnvValue` function writes changes back to `.env` and hot-reloads the in-memory config—no restart required.
+
+## Key Engineering Highlights
+
+### Automatic Update with Changelog Analysis
+
+On each start, the script pulls the latest `n8nio/n8n` image and compares image IDs. If a new version is detected:
+
+1. **Fetch GitHub releases** via REST API
+2. **Parse changelog** for the last 10 releases
+3. **Detect breaking changes** using regex pattern matching:
+    - Keywords: `breaking`, `removed`, `deprecated`, `migration`, `incompatible`
+4. **Display warnings** if breaking changes are found
+5. **Show changelog overview** (first 15 lines)
+6. **Prompt user** for confirmation (or skip in AutoStart mode)
+7. **Create safety backup** before applying update
+8. **Force recreate container** with new image
+
+### Backup Rotation Strategy
+
+The backup system implements a **FIFO rotation** with configurable retention:
+
+```powershell
+$allBackups = Get-ChildItem $backupsPath -Filter "*.zip" | Sort-Object CreationTime
+if ($allBackups.Count -gt $maxBackups) {
+    $toDelete = $allBackups | Select-Object -First ($allBackups.Count - $maxBackups)
+    foreach ($f in $toDelete) {
+        Remove-Item $f.FullName -Force
+    }
+}
+```
+
+Backups are sorted by creation time, and the oldest are deleted when the count exceeds `PS1_MAX_BACKUPS`.
+
+### Auto-Backup Scheduling
+
+The script uses a **sentinel file** (`.last_auto_backup`) to track the last backup time:
+
+```powershell
+function Test-AutoBackupDue {
+    if (-not $autoBackupEnabled) { return $false }
+    $sentinel = Join-Path $backupsPath ".last_auto_backup"
+    if (-not (Test-Path $sentinel)) { return $true }
+    $lastRun = (Get-Item $sentinel).LastWriteTime
+    return ((Get-Date) - $lastRun).TotalHours -ge $autoBackupIntervalHours
+}
+```
+
+On each start, if the interval has elapsed, a silent backup is created and the sentinel is updated.
+
+### Configuration Hot-Reload
+
+The `Set-EnvValue` function modifies the `.env` file and reloads all variables without restarting the script:
+
+```powershell
+function Set-EnvValue {
+    param([string]$Key, [string]$Value)
+    $content = Get-Content $envFile -Raw
+    if ($content -match "(?m)^\s*$Key\s*=") {
+        $content = $content -replace "(?m)^\s*$Key\s*=.*", "$Key=$Value"
+    } else {
+        $content += "`n$Key=$Value"
+    }
+    Set-Content -Path $envFile -Value $content -Encoding UTF8 -NoNewline
+    Reload-EnvVars
+}
+```
+
+This allows users to change settings (port, log level, concurrency, etc.) without exiting the menu.
+
+### Restore with Validation
+
+The restore process includes multiple safety checks:
+
+1. **List available backups** sorted by date (newest first)
+2. **User selection** with bounds checking
+3. **Confirmation prompt** warning about data loss
+4. **Container stop** before extraction
+5. **Temporary extraction** to `_restore_temp` directory
+6. **Validation** of extracted structure (must contain `data/` folder)
+7. **Atomic swap** of data directory
+8. **Cleanup** of temporary files
+9. **Container restart** with status verification
+
+## Configuration Options
+
+All settings in `.env`:
+
+| Key                                | Default                 | Description                             |
+| ---------------------------------- | ----------------------- | --------------------------------------- |
+| `N8N_PORT`                         | `5678`                  | Exposed port                            |
+| `N8N_LOG_LEVEL`                    | `info`                  | `error / warn / info / debug / verbose` |
+| `N8N_CONCURRENCY_PRODUCTION_LIMIT` | `10`                    | Max parallel executions                 |
+| `PS1_AUTO_BACKUP_ENABLED`          | `true`                  | Enable scheduled auto-backup            |
+| `PS1_AUTO_BACKUP_INTERVAL_HOURS`   | `24`                    | Hours between auto-backups              |
+| `PS1_MAX_BACKUPS`                  | `5`                     | Max backups to retain (older pruned)    |
+| `N8N_BINARY_DATA_MODE`             | `filesystem`            | Binary data storage mode                |
+| `N8N_EDITOR_BASE_URL`              | `http://localhost:5678` | Editor base URL                         |
+| `N8N_BLOCK_FS_WRITE_ACCESS`        | `false`                 | Block filesystem write access           |
+| `N8N_LOG_FILE_MAX_SIZE`            | `20`                    | Max log file size (MB)                  |
+| `N8N_LOG_FILE_MAX_COUNT`           | `7`                     | Max log file count                      |
+
+## Requirements
+
+- **Windows** with PowerShell 5.1+
+- **Docker Desktop**
+- **Internet access** (for image pulls and GitHub changelog fetch)
+
+## Tech Stack
+
+**Language:** PowerShell 7.x
+
+**Containerization:** Docker · Docker Compose
+
+**Platform:** Windows 10/11
+
+**External APIs:** Docker Hub · GitHub REST API

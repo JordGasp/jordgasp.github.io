@@ -1,0 +1,77 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import Footer from '../components/Footer.astro';
+
+const projects = await getCollection('projects');
+const sortedProjects = projects.sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout title="Jordan Gaspoz - Backend & Automation Engineer">
+  <Hero />
+
+  <!-- Projects Section -->
+  <section id="projects" class="py-20 px-4">
+    <div class="max-w-6xl mx-auto">
+      <!-- Section Header -->
+      <div class="text-center mb-16">
+        <h2 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-accent-green to-accent-purple bg-clip-text text-transparent py-2">
+          Featured Projects
+        </h2>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+          Production-grade systems built with a focus on reliability, scalability, and automation
+        </p>
+      </div>
+
+      <!-- Projects Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {sortedProjects.map((project) => (
+          <ProjectCard
+            title={project.data.title}
+            tagline={project.data.tagline}
+            description={project.data.description}
+            tech={project.data.tech}
+            slug={project.slug}
+            github={project.data.github}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack Section -->
+  <section class="py-20 px-4 bg-dark-card/30">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-dark-text">
+          Tech Stack
+        </h2>
+        <p class="text-gray-400">
+          Technologies I work with on a daily basis
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {[
+          { name: 'Python 3.11', category: 'Language' },
+          { name: 'Flask', category: 'Backend' },
+          { name: 'Telethon', category: 'API Client' },
+          { name: 'n8n', category: 'Orchestration' },
+          { name: 'Docker', category: 'Infrastructure' },
+          { name: 'Claude API', category: 'AI/NLP' },
+          { name: 'PowerShell', category: 'Automation' },
+          { name: 'SQLite', category: 'Database' },
+        ].map((tech) => (
+          <div class="bg-dark-card border border-dark-border rounded-lg p-4 text-center hover:border-accent-green/50 transition-colors duration-300">
+            <p class="font-mono text-sm text-accent-purple mb-1">{tech.category}</p>
+            <p class="text-dark-text font-semibold">{tech.name}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</BaseLayout>

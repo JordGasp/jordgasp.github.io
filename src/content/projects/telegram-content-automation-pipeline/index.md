@@ -1,0 +1,169 @@
+---
+title: "Telegram Content Automation Pipeline"
+tagline: "Production-grade automation infrastructure for multimedia content processing"
+description: "End-to-end automation system that ingests multimedia content from Telegram, transcribes with Whisper, generates editorial sequences via Claude AI, and schedules delivery autonomously."
+tech:
+    [
+        "Python 3.11",
+        "Flask",
+        "Telethon",
+        "faster-whisper",
+        "n8n",
+        "Claude API",
+        "Docker",
+        "SQLite",
+    ]
+github: "https://github.com/JordGasp/TG-Auto-Backend"
+featured: true
+order: 1
+---
+
+## Overview
+
+This **production-grade content operations pipeline** handles the full cycle from raw multimedia ingestion to scheduled, AI-generated editorial sequences. The system runs autonomously on a VPS with built-in fault tolerance and idempotency guarantees.
+
+The architecture is intentionally minimal in dependencies but non-trivial in implementation: a Flask HTTP server bridges a Telethon asyncio client, feeds transcription jobs to Whisper, and exposes a clean REST API consumed by a 4-workflow n8n orchestration layer.
+
+## Architecture
+
+The system is composed of two main components working in tandem:
+
+### 1. TG-Auto-Backend (Flask Server)
+
+REST gateway that abstracts Telegram API complexity and handles:
+
+- **Event loop isolation**: Telethon runs in a dedicated thread with its own asyncio loop, preventing HTTP server blocking
+- **Idempotency layer**: SHA-256 cache (SQLite, 2h TTL) ensures write operations are never executed twice
+- **Rate limiting**: Automatic `FloodWaitError` handling with exponential retry and jitter
+- **Transcription pipeline**: Whisper small int8 with language detection, VAD filtering, and music-only detection
+- **HTML parser**: Custom converter supporting nested tags (`<b><u>`) with correct UTF-16 offset tracking for emojis
+
+**Key Technical Decisions:**
+
+- Single-worker Waitress WSGI to guarantee FIFO order and eliminate race conditions
+- `asyncio.run_coroutine_threadsafe()` bridge for inter-thread communication
+- Entity resolution without `get_dialogs()` to avoid flood waits on large accounts
+
+### 2. n8n Orchestration Layer
+
+4-workflow system with self-healing capabilities:
+
+**WF0 — Auto Relaunch**
+
+- Computes next execution time from scheduling queue
+- Loops media sync until 1h before target
+- Triggers orchestrator at optimal time
+
+**WF1 — Orchestrator**
+
+- Health check with exponential retry (up to 15 attempts)
+- SSH Docker restart on failure
+- Batches channels and dispatches processing
+
+**WF2 — Sync Media Library**
+
+- Incrementally syncs reusable media from source channels
+- Batch transcription via Whisper
+- Claude Haiku auto-tagging for semantic metadata extraction
+
+**WF3 — Process Channel** (Core Pipeline)
+
+1. Fetch new messages since last processed ID (incremental, replay-safe)
+2. Parse and segment into logical content groups
+3. Parallel media processing (Whisper transcription + photo download)
+4. Assemble multimodal Claude context (text + truncated transcriptions + base64 images)
+5. Call Claude Sonnet with strict JSON schema enforcement
+6. Build scheduling timeline with timezone-aware coefficient weighting
+7. Inject custom emojis via `<tg-emoji>` tags with UTF-16 document IDs
+8. POST sequence to `/schedule_messages`
+9. Update replay state and mark consumed media
+
+## Key Engineering Highlights
+
+### Async/Sync Bridge
+
+Flask is synchronous (Waitress, `threads=1`). Telethon requires asyncio. The naive solution—`asyncio.run()` per request—would create/destroy event loops constantly, causing race conditions.
+
+**Solution:** A single asyncio event loop runs in a dedicated daemon thread. All Flask routes submit coroutines via `asyncio.run_coroutine_threadsafe()` and block with `.result(timeout=3600)`.
+
+```python
+_loop = asyncio.new_event_loop()
+
+def _start_loop():
+    asyncio.set_event_loop(_loop)
+    _loop.run_forever()
+
+threading.Thread(target=_start_loop, daemon=True).start()
+
+def run(coro):
+    return asyncio.run_coroutine_threadsafe(coro, _loop).result(timeout=3600)
+```
+
+### SHA-256 Idempotency Cache
+
+n8n retries failed HTTP requests. Without idempotency, a network timeout would trigger duplicate Telegram sends.
+
+Every POST route hashes `(route, body)` with SHA-256 and checks a SQLite cache before executing. Identical requests within 2 hours return the cached result immediately.
+
+### Custom Telegram HTML Parser
+
+Telegram's Bot API uses restricted HTML with `<b>`, `<u>`, and `<tg-emoji emoji-id="...">` including arbitrary nesting. Telethon expects plain text + `MessageEntity` objects with **UTF-16 offsets** (not UTF-8, not character count).
+
+Python strings are UCS-4 internally. Every character outside the BMP (emoji, some CJK) takes 2 UTF-16 code units but 1 Python character.
+
+```python
+def _utf16_len(s: str) -> int:
+    return sum(2 if ord(c) > 0xFFFF else 1 for c in s)
+```
+
+The parser walks the HTML tree, maintaining a `_pos` counter in UTF-16 units, and produces a `(plain_text, [MessageEntity])` tuple that Telethon can send directly.
+
+### Whisper Pipeline with Language Normalization
+
+Audio/video files are downloaded, converted to 16kHz mono WAV via FFmpeg, then transcribed with `faster-whisper`. The pipeline handles three edge cases:
+
+- **Language detection from caption**: If the Telegram message has text ≥15 chars, language is inferred from stopword frequency before passing to Whisper
+- **Low-confidence filtering**: Transcriptions with `language_probability < 0.65` are normalized to `[no speech detected]`
+- **Music-only detection**: Results containing only music notation characters (♪♫♬) are discarded
+
+## Infrastructure
+
+```
+VPS (Ubuntu 24)
+├── tg-server          → Docker container, port 5000 (internal)
+│   ├── Flask + Waitress (threads=1)
+│   ├── Telethon client (asyncio dedicated thread)
+│   ├── faster-whisper small int8 (CPU)
+│   └── SQLite idempotency cache (Docker volume)
+└── n8n + Traefik      → Docker Compose, HTTPS via Let's Encrypt
+    ├── n8n (port 5678, internal)
+    └── Traefik (ports 80/443, auto-cert)
+```
+
+**Network:** Shared Docker bridge (`n8n_default`)
+**Access:** tg-server reachable from n8n at `http://tg-server:5000`
+
+## API Reference
+
+All routes accept and return JSON. A 2-hour idempotency cache is active on all POST routes.
+
+| Route                     | Method | Description                             |
+| ------------------------- | ------ | --------------------------------------- |
+| `/health`                 | GET    | Server status: telethon, whisper, cache |
+| `/get_messages`           | POST   | Fetch channel messages since last ID    |
+| `/get_photos`             | POST   | Download photos as base64               |
+| `/get_whisper_transcript` | POST   | Transcribe audio/video via Whisper      |
+| `/get_scheduled_info`     | POST   | Scheduled message count + last time     |
+| `/schedule_messages`      | POST   | Schedule a sequence of messages         |
+
+## Tech Stack
+
+**Backend:** Python 3.11 · Flask · Waitress · Telethon · SQLite
+
+**AI/NLP:** Anthropic Claude API · faster-whisper · FFmpeg
+
+**Orchestration:** n8n · webhook chains · sub-workflow patterns
+
+**Infrastructure:** Docker · Docker Compose · Traefik · Let's Encrypt · SSH
+
+**Deployment:** VPS (Ubuntu 24) · reverse proxy · HTTPS auto-cert
