@@ -8,6 +8,9 @@ featured: true
 order: 2
 ---
 
+import { Image } from "astro:assets";
+import interactiveMenu from "./interactive-menu-test.png";
+
 ## Overview
 
 A **PowerShell management tool** designed as a local development mirror of a production n8n VPS. It enables safe workflow iteration without touching the live environment, with backup/restore capabilities and intelligent update management.
@@ -30,7 +33,7 @@ The script provides a complete lifecycle management solution: from Docker daemon
 
 ### Interactive Menu
 
-<img src="/interactive-menu.png" alt="Interactive menu" width="400"  style="display: block; margin-left: 0; margin-right: auto;" />
+<Image src={interactiveMenu} width={400} alt='Interactive menu' />
 
 ## Features
 

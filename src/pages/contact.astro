@@ -1,0 +1,35 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Contact from "../components/Contact.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<BaseLayout
+	title='Contact — Jordan Gaspoz'
+	description='Get in touch with me for backend and automation work.'
+>
+	<!-- Back button -->
+	<div class='max-w-7xl mx-auto px-4 pt-8'>
+		<a
+			href='/'
+			class='inline-flex items-center gap-2 text-gray-400 hover:text-accent-green transition-colors duration-300 mb-8 group'
+		>
+			<svg
+				class='w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1'
+				fill='none'
+				stroke='currentColor'
+				viewBox='0 0 24 24'
+			>
+				<path
+					stroke-linecap='round'
+					stroke-linejoin='round'
+					stroke-width='2'
+					d='M15 19l-7-7 7-7'></path>
+			</svg>
+			<span>Back to projects</span>
+		</a>
+	</div>
+
+	<Contact />
+	<Footer />
+</BaseLayout>
