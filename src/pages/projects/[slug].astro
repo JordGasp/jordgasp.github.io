@@ -201,7 +201,8 @@ const { Content } = await project.render();
 				headings.length > 1
 					? (activeIndex / (headings.length - 1)) * 100
 					: 100;
-			progressBar.style.height = `${Math.max(5, progress)}%`;
+			if (progressBar)
+				progressBar.style.height = `${Math.max(5, progress)}%`;
 		}
 
 		// 3. Écoute du scroll
