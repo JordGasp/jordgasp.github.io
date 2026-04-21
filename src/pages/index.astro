@@ -16,12 +16,17 @@ const sortedProjects = projects.sort((a, b) => a.data.order - b.data.order);
 	<section class='py-16 px-4'>
 		<div class='max-w-2xl mx-auto text-center'>
 			<p class='text-gray-300 text-lg leading-relaxed'>
-				I don't just write code. <br />I look at a process and ask why
-				it still requires a human. <br />When I was brought in to
-				manually manage a Telegram content operation, I spent the first
-				week understanding the system, then built a pipeline that made
-				the <b>manual work obsolete.</b>
-				That's the instinct I bring to every backend or automation problem.
+				I don't just write code. <br />I look at a <strong
+					class='text-dark-text'>process</strong
+				> and ask why it still requires a human. <br />When I was
+				brought in to manually manage a Telegram content operation, I
+				spent the first week understanding the system, then built a
+				pipeline that made the <strong class='text-dark-text'
+					>manual work obsolete.</strong
+				>
+				That's the instinct I bring to every backend or <strong
+					class='text-dark-text'>automation problem.</strong
+				>
 			</p>
 		</div>
 	</section>
@@ -43,7 +48,7 @@ const sortedProjects = projects.sort((a, b) => a.data.order - b.data.order);
 			</div>
 
 			<!-- Projects Grid -->
-			<div class='grid grid-cols-1 md:grid-cols-2 gap-8'>
+			<div class='grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-8'>
 				{
 					sortedProjects.map((project) => (
 						<ProjectCard
@@ -57,6 +62,31 @@ const sortedProjects = projects.sort((a, b) => a.data.order - b.data.order);
 					))
 				}
 			</div>
+		</div>
+		<!-- Post-projects CTA -->
+		<div class='text-center mt-16'>
+			<p class='text-gray-400 mb-6'>Interested in what you see?</p>
+			<a
+				href='/contact'
+				class='inline-flex items-center gap-2 px-8 py-3 border border-accent-purple/50
+        hover:border-accent-purple text-accent-purple hover:text-white
+        hover:bg-accent-purple/10 font-semibold rounded-lg transition-all
+        duration-300 hover:scale-105 backdrop-blur-sm'
+			>
+				Get in touch
+				<svg
+					class='w-4 h-4'
+					fill='none'
+					stroke='currentColor'
+					viewBox='0 0 24 24'
+				>
+					<path
+						stroke-linecap='round'
+						stroke-linejoin='round'
+						stroke-width='2'
+						d='M17 8l4 4m0 0l-4 4m4-4H3'></path>
+				</svg>
+			</a>
 		</div>
 	</section>
 
@@ -72,7 +102,7 @@ const sortedProjects = projects.sort((a, b) => a.data.order - b.data.order);
 				</p>
 			</div>
 
-			<div class='grid grid-cols-1 md:grid-cols-3 gap-6'>
+			<div class='grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6'>
 				{
 					[
 						{
