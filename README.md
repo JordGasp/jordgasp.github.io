@@ -64,14 +64,14 @@ npm run preview
 
 ## Content Management
 
-Projects are managed through Markdown files in `src/content/projects/`. Each project is organized in its own folder with an `index.md` file and optional images.
+Projects are managed through Markdown files in `src/content/projects/`. Each project is organized in its own folder with an `index.mdx` file and optional images.
 
 ### Project Structure
 
 ```
 src/content/projects/
 ├── your-project-name/
-│   ├── index.md              # Project content and metadata
+│   ├── index.mdx              # Project content and metadata
 │   ├── screenshot-1.png      # Optional: screenshots
 │   └── architecture.png      # Optional: diagrams
 ```
@@ -79,7 +79,7 @@ src/content/projects/
 ### Adding a New Project
 
 1. **Create a project folder** in `src/content/projects/` with a descriptive name (use kebab-case)
-2. **Create `index.md`** inside the folder with the following frontmatter:
+2. **Create `index.mdx`** inside the folder with the following frontmatter:
 
 ```yaml
 ---
