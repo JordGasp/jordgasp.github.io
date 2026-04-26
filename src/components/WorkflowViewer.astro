@@ -1,0 +1,161 @@
+---
+interface Props {
+	src: string;
+	height?: string;
+}
+const { src, height = "500px" } = Astro.props;
+---
+
+<div
+	class='n8n-container'
+	data-src={src}
+	data-height={height}
+	style={`height: ${height};`}
+>
+	<div class='n8n-placeholder'>
+		<span class='n8n-placeholder-dot'></span>
+		<span class='n8n-placeholder-dot'></span>
+		<span class='n8n-placeholder-dot'></span>
+	</div>
+</div>
+
+<script>
+	const N8N_CDN =
+		"https://cdn.jsdelivr.net/npm/@n8n_io/n8n-demo-component/n8n-demo.bundled.js";
+	const cache = new Map<string, any>();
+	let scriptLoaded = false;
+
+	function injectScript(): Promise<void> {
+		if (scriptLoaded || customElements.get("n8n-demo")) {
+			scriptLoaded = true;
+			return Promise.resolve();
+		}
+		return new Promise((resolve, reject) => {
+			const existing = document.querySelector(`script[src="${N8N_CDN}"]`);
+			if (existing) {
+				// Script tag exists but element not yet defined — just wait below
+				resolve();
+				return;
+			}
+			const script = document.createElement("script");
+			script.type = "module";
+			script.src = N8N_CDN;
+			script.onload = () => {
+				scriptLoaded = true;
+				resolve();
+			};
+			script.onerror = () =>
+				reject(new Error("Failed to load n8n-demo script"));
+			document.head.appendChild(script);
+		});
+	}
+
+	function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+		const timeout = new Promise<never>((_, reject) =>
+			setTimeout(() => reject(new Error(`Timeout after ${ms}ms`)), ms),
+		);
+		return Promise.race([promise, timeout]);
+	}
+
+	async function loadWorkflow(container: HTMLElement): Promise<void> {
+		const src = container.dataset.src!;
+		const height = container.dataset.height ?? "500px";
+
+		try {
+			await injectScript();
+			await withTimeout(customElements.whenDefined("n8n-demo"), 10_000);
+
+			let data = cache.get(src);
+			if (!data) {
+				const res = await fetch(src);
+				if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+				data = await res.json();
+				cache.set(src, data);
+			}
+
+			const demo = document.createElement("n8n-demo");
+			demo.setAttribute("workflow", JSON.stringify(data));
+			demo.style.width = "100%";
+			demo.style.height = height;
+			demo.style.display = "block";
+
+			container.appendChild(demo);
+			container.querySelector(".n8n-placeholder")?.remove();
+		} catch (e) {
+			console.error("WorkflowViewer: failed to load", src, e);
+			container.innerHTML = `<p class="n8n-error">Failed to load workflow.</p>`;
+		}
+	}
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					const container = entry.target as HTMLElement;
+					observer.unobserve(container);
+					loadWorkflow(container);
+				}
+			});
+		},
+		{ rootMargin: "200px" },
+	);
+
+	document
+		.querySelectorAll<HTMLElement>(".n8n-container")
+		.forEach((el) => observer.observe(el));
+</script>
+
+<style>
+	.n8n-container {
+		width: 100%;
+		margin: 2rem 0;
+		background: #1a1a1a;
+		border: 1px solid #2a2a2a;
+		border-radius: 8px;
+		overflow: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.n8n-placeholder {
+		display: flex;
+		gap: 8px;
+		align-items: center;
+	}
+
+	.n8n-placeholder-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: #3a3a3a;
+		animation: n8n-pulse 1.4s ease-in-out infinite;
+	}
+
+	.n8n-placeholder-dot:nth-child(2) {
+		animation-delay: 0.2s;
+	}
+	.n8n-placeholder-dot:nth-child(3) {
+		animation-delay: 0.4s;
+	}
+
+	@keyframes n8n-pulse {
+		0%,
+		80%,
+		100% {
+			opacity: 0.3;
+			transform: scale(0.8);
+		}
+		40% {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	.n8n-error {
+		color: #ef4444;
+		font-family: monospace;
+		font-size: 0.875rem;
+		padding: 1rem;
+	}
+</style>

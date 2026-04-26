@@ -15,7 +15,7 @@ import interactiveMenu from "./interactive-menu-test.png";
 
 A **PowerShell management tool** designed as a local development mirror of a production n8n VPS. It enables safe workflow iteration without touching the live environment, with backup/restore capabilities and intelligent update management.
 
-The script provides a complete lifecycle management solution: from Docker daemon health checks to automated backups with rotation, changelog analysis before updates, and interactive configuration management—all through a single, user-friendly interface.
+The script provides a complete lifecycle management solution: from Docker daemon health checks to automated backups with rotation, changelog analysis before updates, and interactive configuration management - all through a single, user-friendly interface.
 
 ## Usage
 
@@ -94,7 +94,7 @@ n8n/
 └── backups/                     # versioned ZIP backups
 ```
 
-The script reads all paths, ports, and settings from `.env` at startup and exposes them as PowerShell variables. The `Set-EnvValue` function writes changes back to `.env` and hot-reloads the in-memory config—no restart required.
+The script reads all paths, ports, and settings from `.env` at startup and exposes them as PowerShell variables. The `Set-EnvValue` function writes changes back to `.env` and hot-reloads the in-memory config - no restart required.
 
 ## Key Engineering Highlights
 

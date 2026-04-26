@@ -1,0 +1,926 @@
+{
+  "name": "sub - Sync Medias Influenceur",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "name": "WH: Workflow Trigger Execute",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "LOG: Split Iterate Media Channels",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        672,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Filter Relevant Media",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Prepare Database Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Extract Has More Flag",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Reset Has More Flag",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Prepare Claude API Call",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.api_body) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "AI: Claude Haiku Tag Media",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "alwaysOutputData": true,
+      "position": [
+        3136,
+        176
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "name": "Anthropic n8n-VPS workspace"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Parse Claude Response Tags",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "name": "LOG: Wait Delay",
+      "webhookId": "1e591f10-5bfc-4668-aa68-6ddc0cc1cc07",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3584,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json._skip }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "LOG: If Skip Media Exhausted",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json._skip }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "LOG: If Skip No Transcription",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2912,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "LOG: Split Iterate Tags",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2464,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "LPqdGeHjjGSYeZMo",
+          "mode": "list"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "1"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "name": "DB: Fetch Global Config",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": false,
+      "position": [
+        224,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "8EiSu9O3zVKk7ymF",
+          "mode": "list"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "active",
+              "condition": "isTrue"
+            },
+            {
+              "keyName": "type",
+              "keyValue": "influenceur"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "name": "DB: Fetch Active Media Channels",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        448,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "PzB2vgvWwOMtVpwE",
+          "mode": "list",
+          "cachedResultName": "medias_influenceur",
+          "cachedResultUrl": "/projects/XiLccrxNk7GIzD85/datatables/PzB2vgvWwOMtVpwE"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "source_channel",
+              "keyValue": "={{ $json.channel_id }}"
+            }
+          ]
+        },
+        "limit": 1,
+        "orderBy": true,
+        "orderByColumn": "id"
+      },
+      "name": "DB: Fetch Last Message ID",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        896,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "PzB2vgvWwOMtVpwE",
+          "mode": "list"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "message_id",
+              "keyValue": "={{ $json.message_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_used": "={{ false }}",
+            "transcription": "={{ $json.transcription }}",
+            "lang": "={{ $json.lang }}",
+            "source_channel": "={{ $json.source_channel }}",
+            "type": "={{ $json.type }}",
+            "sent_date": "={{ $json.sent_date }}",
+            "texte": "={{ $json.texte }}",
+            "message_id": "={{ $json.message_id }}",
+            "multiplicateur_mentionne": "={{ null }}",
+            "montant_mentionne": "={{ null }}",
+            "tags": "={{ null }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "transcription",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "texte",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "lang",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "source_channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "is_used",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "multiplicateur_mentionne",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "montant_mentionne",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "name": "DB: Upsert Media Influencer",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "PzB2vgvWwOMtVpwE",
+          "mode": "list"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "message_id",
+              "keyValue": "={{ $json.message_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tags": "={{ $json.tags }}",
+            "montant_mentionne": "={{ $json.montant_mentionne }}",
+            "multiplicateur_mentionne": "={{ $json.multiplicateur_mentionne }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "transcription",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "texte",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "lang",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "source_channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "is_used",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "tags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "multiplicateur_mentionne",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "montant_mentionne",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "name": "DB: Upsert Tags Metadata",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3808,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB: Fetch Global Config').first().json.python_url }}/get_messages",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"{{ $json.source_channel }}\",\n  \"last_message_id\": \"{{ $json.message_id }}\",\n  \"offset_date\": \"{{ $json.sent_date }}\",\n  \"days_ago\": 90\n}\n",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "name": "API: Telethon Fetch Messages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "alwaysOutputData": true,
+      "position": [
+        1120,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB: Fetch Global Config').first().json.python_url }}/get_whisper_transcript",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel_id: $('DB: Fetch Last Message ID').first().json.source_channel, msg_ids: $input.all().map(i => i.json.id) }) }}",
+        "options": {
+          "timeout": 21600000
+        }
+      },
+      "name": "API: Telethon Fetch Whisper Transcript",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        1792,
+        240
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "LOG: End",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        48
+      ]
+    }
+  ],
+  "connections": {
+    "WH: Workflow Trigger Execute": {
+      "main": [
+        [
+          {
+            "node": "JS: Reset Has More Flag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Split Iterate Media Channels": {
+      "main": [
+        [
+          {
+            "node": "JS: Extract Has More Flag",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB: Fetch Last Message ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Filter Relevant Media": {
+      "main": [
+        [
+          {
+            "node": "LOG: If Skip Media Exhausted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Prepare Database Rows": {
+      "main": [
+        [
+          {
+            "node": "DB: Upsert Media Influencer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Extract Has More Flag": {
+      "main": [
+        [
+          {
+            "node": "LOG: End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Reset Has More Flag": {
+      "main": [
+        [
+          {
+            "node": "DB: Fetch Global Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Prepare Claude API Call": {
+      "main": [
+        [
+          {
+            "node": "LOG: If Skip No Transcription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Claude Haiku Tag Media": {
+      "main": [
+        [
+          {
+            "node": "JS: Parse Claude Response Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Parse Claude Response Tags": {
+      "main": [
+        [
+          {
+            "node": "LOG: Wait Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: If Skip Media Exhausted": {
+      "main": [
+        [
+          {
+            "node": "API: Telethon Fetch Whisper Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LOG: Split Iterate Media Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: If Skip No Transcription": {
+      "main": [
+        [
+          {
+            "node": "DB: Upsert Tags Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI: Claude Haiku Tag Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Split Iterate Tags": {
+      "main": [
+        [
+          {
+            "node": "LOG: Split Iterate Media Channels",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "JS: Prepare Claude API Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Wait Delay": {
+      "main": [
+        [
+          {
+            "node": "DB: Upsert Tags Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Fetch Global Config": {
+      "main": [
+        [
+          {
+            "node": "DB: Fetch Active Media Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Fetch Active Media Channels": {
+      "main": [
+        [
+          {
+            "node": "LOG: Split Iterate Media Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Fetch Last Message ID": {
+      "main": [
+        [
+          {
+            "node": "API: Telethon Fetch Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Upsert Media Influencer": {
+      "main": [
+        [
+          {
+            "node": "LOG: Split Iterate Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Upsert Tags Metadata": {
+      "main": [
+        [
+          {
+            "node": "LOG: Split Iterate Tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: Telethon Fetch Messages": {
+      "main": [
+        [
+          {
+            "node": "JS: Filter Relevant Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: Telethon Fetch Whisper Transcript": {
+      "main": [
+        [
+          {
+            "node": "JS: Prepare Database Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveDataSuccessExecution": "none",
+    "timezone": "Europe/Paris",
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedPerExecution": 120,
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "TG-Auto"
+    }
+  ]
+}

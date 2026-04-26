@@ -1,0 +1,1374 @@
+{
+  "name": "sub - Process Channel",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Reset static data final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "executeOnce": true,
+      "position": [
+        -400,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Parse and group sequences",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Collect all media",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB: Fetch global_config').item.json.python_url }}/get_messages",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "channel",
+              "value": "={{ $('WH: Orchestrator Trigger input').item.json.source_channel }}"
+            },
+            {
+              "name": "last_message_id",
+              "value": "={{ $('DB: Fetch replay_state').item.json.last_message_id ?? 0 }}"
+            },
+            {
+              "name": "last_scheduled_at",
+              "value": "={{ $('API: Telethon Fetch scheduled info').first().json.last_scheduled_time }}"
+            },
+            {
+              "name": "days_ago",
+              "value": "={{ $('WH: Orchestrator Trigger input').item.json.days_ago }}"
+            },
+            {
+              "name": "limit",
+              "value": "300"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "name": "API: Telethon Fetch messages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        1392,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "LPqdGeHjjGSYeZMo",
+          "mode": "list",
+          "cachedResultName": "global_config",
+          "cachedResultUrl": "/projects/XiLccrxNk7GIzD85/datatables/LPqdGeHjjGSYeZMo"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "1"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "name": "DB: Fetch global_config",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "position": [
+        -176,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "z56McJl5ipQnlDyF",
+          "mode": "list",
+          "cachedResultName": "replay_state",
+          "cachedResultUrl": "/projects/XiLccrxNk7GIzD85/datatables/z56McJl5ipQnlDyF"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "dest_channel",
+              "keyValue": "={{ $('WH: Orchestrator Trigger input').item.json.dest_channel }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "name": "DB: Fetch replay_state",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        48,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "z56McJl5ipQnlDyF",
+          "mode": "list",
+          "cachedResultName": "replay_state",
+          "cachedResultUrl": "/projects/XiLccrxNk7GIzD85/datatables/z56McJl5ipQnlDyF"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "dest_channel",
+              "keyValue": "={{ $('WH: Orchestrator Trigger input').item.json.dest_channel }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "last_message_id": "={{ null }}",
+            "last_schedule_at": "={{ null }}",
+            "last_attention_grabber_id": "=0",
+            "last_sent_attention_grabber_at": "={{ null }}",
+            "dest_channel": "={{ $('WH: Orchestrator Trigger input').item.json.dest_channel }}"
+          },
+          "matchingColumns": [
+            "source_channel"
+          ],
+          "schema": [
+            {
+              "displayName": "dest_channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "last_message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "last_schedule_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "last_attention_grabber_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "last_sent_attention_grabber_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "name": "DB: Upsert replay_state",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "position": [
+        496,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB: Fetch global_config').item.json.python_url }}/get_scheduled_info",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel_id\": \"{{ $('WH: Orchestrator Trigger input').item.json.dest_channel }}\"\n}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "name": "API: Telethon Fetch scheduled info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        496,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.dest_channel }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "leftValue": "={{ $json.dest_channel }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "LOG: Validate dest_channel",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        272,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ (98 - ($('API: Telethon Fetch scheduled info').first().json.scheduled_count ?? 0)) - 7 }}",
+              "rightValue": 13,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "LOG: Validate available slots",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        720,
+        -416
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "LOG: End Insufficient space",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Kk0ldpgCwqjY7X9j",
+          "mode": "list",
+          "cachedResultName": "prompt_claude",
+          "cachedResultUrl": "/projects/XiLccrxNk7GIzD85/datatables/Kk0ldpgCwqjY7X9j"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lang",
+              "keyValue": "={{ $('WH: Orchestrator Trigger input').item.json.lang }}"
+            }
+          ]
+        }
+      },
+      "name": "DB: Fetch prompt_claude",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "position": [
+        944,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "PzB2vgvWwOMtVpwE",
+          "mode": "list",
+          "cachedResultName": "medias_library",
+          "cachedResultUrl": "/projects/XiLccrxNk7GIzD85/datatables/PzB2vgvWwOMtVpwE"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lang",
+              "keyValue": "={{ $('WH: Orchestrator Trigger input').item.json.lang }}"
+            },
+            {
+              "keyName": "is_used",
+              "condition": "isFalse"
+            }
+          ]
+        },
+        "orderBy": true,
+        "orderByColumn": "sent_date",
+        "orderByDirection": "ASC"
+      },
+      "name": "DB: Fetch medias_library",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        1168,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB: Fetch global_config').item.json.python_url }}/get_whisper_transcript",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel_id\": \"{{ $json.channel_id }}\",\n  \"language\": \"{{ $('WH: Orchestrator Trigger input').item.json.lang }}\",\n  \"msg_ids\": {{ JSON.stringify($json.audioVideoIds) }}\n}",
+        "options": {
+          "timeout": 3600000
+        }
+      },
+      "name": "API: Telethon Fetch Whisper transcripts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        2064,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB: Fetch global_config').item.json.python_url }}/get_photos",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel_id\": \"{{ $('JS: Collect all media').first().json.channel_id }}\",\n  \"msg_ids\": {{ JSON.stringify($('JS: Collect all media').first().json.photoIds) }}\n}",
+        "options": {
+          "timeout": 3600000
+        }
+      },
+      "name": "API: Telethon Fetch photos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        2288,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Assemble Claude context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2512,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "LOG: Split messages",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2736,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Load used medias state",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        -512
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "[REDACTED]",
+        "options": {
+          "timeout": 3600000
+        }
+      },
+      "name": "AI: Claude generate sequence",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "position": [
+        3184,
+        -512
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "name": "Anthropic n8n-VPS workspace"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Parse Claude JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3408,
+        -448
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "name": "WH: Orchestrator Trigger input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        -624,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Build timeline",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        -704
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "UVZWVNMS32yMeg01",
+          "mode": "list",
+          "cachedResultName": "attention_grabbers",
+          "cachedResultUrl": "/projects/XiLccrxNk7GIzD85/datatables/UVZWVNMS32yMeg01"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lang",
+              "keyValue": "={{ $('WH: Orchestrator Trigger input').first().json.lang }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "name": "DB: Fetch attention_grabbers",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 2000,
+      "position": [
+        3184,
+        -704
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Interleave attention_grabbers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3408,
+        -704
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "P5i9mbLBh5mJgSER",
+          "mode": "list",
+          "cachedResultName": "emoji_dict",
+          "cachedResultUrl": "/projects/XiLccrxNk7GIzD85/datatables/P5i9mbLBh5mJgSER"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "emoji_id",
+              "condition": "isNotEmpty"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "name": "DB: Fetch emoji_dict",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        3632,
+        -704
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Inject emoji HTML tags",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3856,
+        -704
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB: Fetch global_config').first().json.python_url }}/schedule_messages",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"dest_channel\": \"{{ $('WH: Orchestrator Trigger input').first().json.dest_channel }}\",\n  \"source_channel\": \"{{ $('WH: Orchestrator Trigger input').first().json.source_channel }}\",\n  \"messages\": {{ JSON.stringify($input.first().json.messages) }}\n}",
+        "options": {
+          "timeout": 7200000
+        }
+      },
+      "name": "API: Telethon Schedule messages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        4080,
+        -704
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Extract attention_grabber state",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4304,
+        -800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Extract used media state",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4304,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "LOG: Split items loop",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4528,
+        -608
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "PzB2vgvWwOMtVpwE",
+          "mode": "list",
+          "cachedResultName": "medias_library",
+          "cachedResultUrl": "/projects/XiLccrxNk7GIzD85/datatables/PzB2vgvWwOMtVpwE"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "message_id",
+              "keyValue": "={{ $json.media_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_used": true
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "displayName": "message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "transcription",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "texte",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "lang",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "source_channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "displayName": "is_used",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "name": "DB: Update medias_library",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        4752,
+        -560
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "z56McJl5ipQnlDyF",
+          "mode": "list",
+          "cachedResultName": "replay_state",
+          "cachedResultUrl": "/projects/XiLccrxNk7GIzD85/datatables/z56McJl5ipQnlDyF"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "dest_channel",
+              "keyValue": "={{ $('WH: Orchestrator Trigger input').first().json.dest_channel }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "last_message_id": "={{ $('JS: Parse and group sequences').last()?.json?.messages?.at(-1)?.id ?? null }}",
+            "last_attention_grabber_id": "={{ $('JS: Extract attention_grabber state').first().json.last_attention_grabber_id }}",
+            "last_schedule_at": "={{ $('JS: Interleave attention_grabbers').last().json.scheduled_time }}",
+            "last_sent_attention_grabber_at": "={{ $('JS: Extract attention_grabber state').first().json.last_sent_attention_grabber_at }}",
+            "dest_channel": "={{ $('WH: Orchestrator Trigger input').first().json.dest_channel }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "displayName": "dest_channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "last_message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "last_schedule_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "last_attention_grabber_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "displayName": "last_sent_attention_grabber_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "name": "DB: Update replay_state",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        4528,
+        -800
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "empty"
+      },
+      "name": "LOG: wait all branch",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "alwaysOutputData": true,
+      "position": [
+        4752,
+        -752
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Reset static data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "alwaysOutputData": true,
+      "position": [
+        4976,
+        -752
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "LOG: End",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        5200,
+        -752
+      ]
+    }
+  ],
+  "connections": {
+    "JS: Reset static data final": {
+      "main": [
+        [
+          {
+            "node": "DB: Fetch global_config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Parse and group sequences": {
+      "main": [
+        [
+          {
+            "node": "JS: Collect all media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Collect all media": {
+      "main": [
+        [
+          {
+            "node": "API: Telethon Fetch Whisper transcripts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: Telethon Fetch messages": {
+      "main": [
+        [
+          {
+            "node": "JS: Parse and group sequences",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Fetch global_config": {
+      "main": [
+        [
+          {
+            "node": "DB: Fetch replay_state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Fetch replay_state": {
+      "main": [
+        [
+          {
+            "node": "LOG: Validate dest_channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Upsert replay_state": {
+      "main": [
+        [
+          {
+            "node": "LOG: Validate dest_channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: Telethon Fetch scheduled info": {
+      "main": [
+        [
+          {
+            "node": "LOG: Validate available slots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Validate dest_channel": {
+      "main": [
+        [
+          {
+            "node": "API: Telethon Fetch scheduled info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB: Upsert replay_state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Validate available slots": {
+      "main": [
+        [
+          {
+            "node": "DB: Fetch prompt_claude",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LOG: End Insufficient space",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Fetch prompt_claude": {
+      "main": [
+        [
+          {
+            "node": "DB: Fetch medias_library",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Fetch medias_library": {
+      "main": [
+        [
+          {
+            "node": "API: Telethon Fetch messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: Telethon Fetch Whisper transcripts": {
+      "main": [
+        [
+          {
+            "node": "API: Telethon Fetch photos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: Telethon Fetch photos": {
+      "main": [
+        [
+          {
+            "node": "JS: Assemble Claude context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Assemble Claude context": {
+      "main": [
+        [
+          {
+            "node": "LOG: Split messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Split messages": {
+      "main": [
+        [
+          {
+            "node": "JS: Build timeline",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "JS: Load used medias state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Load used medias state": {
+      "main": [
+        [
+          {
+            "node": "AI: Claude generate sequence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Claude generate sequence": {
+      "main": [
+        [
+          {
+            "node": "JS: Parse Claude JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Parse Claude JSON": {
+      "main": [
+        [
+          {
+            "node": "LOG: Split messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH: Orchestrator Trigger input": {
+      "main": [
+        [
+          {
+            "node": "JS: Reset static data final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Build timeline": {
+      "main": [
+        [
+          {
+            "node": "DB: Fetch attention_grabbers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Fetch attention_grabbers": {
+      "main": [
+        [
+          {
+            "node": "JS: Interleave attention_grabbers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Interleave attention_grabbers": {
+      "main": [
+        [
+          {
+            "node": "DB: Fetch emoji_dict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Fetch emoji_dict": {
+      "main": [
+        [
+          {
+            "node": "JS: Inject emoji HTML tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Inject emoji HTML tags": {
+      "main": [
+        [
+          {
+            "node": "API: Telethon Schedule messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: Telethon Schedule messages": {
+      "main": [
+        [
+          {
+            "node": "JS: Extract attention_grabber state",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "JS: Extract used media state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Extract attention_grabber state": {
+      "main": [
+        [
+          {
+            "node": "DB: Update replay_state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Extract used media state": {
+      "main": [
+        [
+          {
+            "node": "LOG: Split items loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Split items loop": {
+      "main": [
+        [
+          {
+            "node": "LOG: wait all branch",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "DB: Update medias_library",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Update medias_library": {
+      "main": [
+        [
+          {
+            "node": "LOG: Split items loop",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LOG: Split items loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Update replay_state": {
+      "main": [
+        [
+          {
+            "node": "LOG: wait all branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: wait all branch": {
+      "main": [
+        [
+          {
+            "node": "JS: Reset static data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Reset static data": {
+      "main": [
+        [
+          {
+            "node": "LOG: End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: End": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedPerExecution": 45,
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "TG-Auto"
+    }
+  ]
+}

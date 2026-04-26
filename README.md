@@ -8,10 +8,10 @@ This portfolio demonstrates production-grade systems through detailed project do
 
 ## Tech Stack
 
-**Frontend Framework:** Astro 5.x  
-**Styling:** Tailwind CSS 3.x  
-**Content Management:** Markdown with YAML frontmatter  
-**Deployment:** GitHub Pages with GitHub Actions  
+**Frontend Framework:** Astro 5.x
+**Styling:** Tailwind CSS 3.x
+**Content Management:** Markdown with YAML frontmatter
+**Deployment:** GitHub Pages with GitHub Actions
 **Type Safety:** TypeScript (strict mode)
 
 ## Architecture
@@ -87,9 +87,9 @@ title: "Your Project Title"
 tagline: "A short, catchy description"
 description: "Detailed description for SEO and project cards"
 tech: ["Technology 1", "Technology 2", "Technology 3"]
-github: "https://github.com/username/repo"  # Optional
-featured: true  # Optional: show on homepage
-order: 1  # Display order (lower numbers appear first)
+github: "https://github.com/username/repo" # Optional
+featured: true # Optional: show on homepage
+order: 1 # Display order (lower numbers appear first)
 ---
 ```
 
@@ -113,6 +113,7 @@ The main interface:
 ### Image Optimization
 
 Images placed in project folders are **automatically optimized** by Astro:
+
 - ✅ Compressed and converted to modern formats (WebP/AVIF)
 - ✅ Responsive image variants generated
 - ✅ Lazy-loaded for better performance
@@ -128,10 +129,10 @@ Images placed in project folders are **automatically optimized** by Astro:
 
 ```css
 .prose img {
-  max-width: 800px;  /* Change this value */
-  width: 100%;
-  height: auto;
-  /* ... */
+	max-width: 800px; /* Change this value */
+	width: 100%;
+	height: auto;
+	/* ... */
 }
 ```
 

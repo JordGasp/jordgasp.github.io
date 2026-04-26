@@ -1,0 +1,534 @@
+{
+  "name": "Auto Relaunch",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "LPqdGeHjjGSYeZMo",
+          "mode": "list",
+          "cachedResultName": "global_config",
+          "cachedResultUrl": "/projects/XiLccrxNk7GIzD85/datatables/LPqdGeHjjGSYeZMo"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "condition": "isNotEmpty"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "name": "DB N8N: Fetch Global Config",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        208,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "BIbblBDwWVDHnAh3",
+          "mode": "list",
+          "cachedResultName": "channels_config",
+          "cachedResultUrl": "/projects/XiLccrxNk7GIzD85/datatables/BIbblBDwWVDHnAh3"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "active",
+              "condition": "isTrue"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "name": "DB N8N: Fetch Active Channels Config",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        432,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://localhost:5678/webhook/orchestrator",
+        "options": {}
+      },
+      "name": "API Orchestrator: Trigger Production",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        2224,
+        160
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://localhost:5678/webhook-test/orchestrator",
+        "options": {}
+      },
+      "name": "API Orchestrator: Trigger Test",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "position": [
+        2448,
+        304
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "s0A1tkgLT1PLjbDR",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/s0A1tkgLT1PLjbDR",
+          "cachedResultName": "sub - Sync Medias Influenceur"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "name": "LOG Workflow: Execute Sync Medias Influenceur",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS Logic: Evaluate Loop Continuation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.shouldContinue }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "leftValue": "={{ $json.shouldContinue }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "leftValue": "={{ $json.shouldContinue }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "LOG If: Should Continue Iteration",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1776,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1104,
+        -48
+      ],
+      "name": "WH Response: Send Scheduled Launch Time"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "auto-relaunch",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "WH Trigger : Auto Relaunch",
+      "webhookId": "0b2ef2e9-c4ac-43cb-860b-ac42e754afcb",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        32
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "Manual Trigger: Workflow Execute",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "name": "LOG Wait: Batch Processing Delay 10 Seconds",
+      "webhookId": "37cefd19-7949-4c0c-bc63-b88af3115627",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "[REDACTED]"
+      },
+      "name": "JS: Calculate Resume Time",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB N8N: Fetch Global Config').item.json.python_url }}/get_scheduled_info",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel_id\": \"{{ $json.dest_channel }}\"\n}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "name": "API: Get Scheduled Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "alwaysOutputData": true,
+      "position": [
+        880,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "name": "LOG: Brief Delay 3 Seconds",
+      "webhookId": "d24216b4-2b90-46c0-b4d0-882c15c7abac",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1104,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "specificTime",
+        "dateTime": "={{ $('JS: Calculate Resume Time').first().json.resumeAt }}"
+      },
+      "name": "LOG: Resume At Scheduled Time",
+      "webhookId": "718dad6a-dd5c-4dc6-b1a2-5624e5351e25",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "LOG: Split Channels Loop",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        656,
+        160
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "LOG: End",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2672,
+        160
+      ]
+    }
+  ],
+  "connections": {
+    "DB N8N: Fetch Global Config": {
+      "main": [
+        [
+          {
+            "node": "DB N8N: Fetch Active Channels Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB N8N: Fetch Active Channels Config": {
+      "main": [
+        [
+          {
+            "node": "LOG: Split Channels Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Orchestrator: Trigger Production": {
+      "main": [
+        [
+          {
+            "node": "LOG: End",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "API Orchestrator: Trigger Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Orchestrator: Trigger Test": {
+      "main": [
+        [
+          {
+            "node": "LOG: End",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "LOG Workflow: Execute Sync Medias Influenceur": {
+      "main": [
+        [
+          {
+            "node": "JS Logic: Evaluate Loop Continuation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS Logic: Evaluate Loop Continuation": {
+      "main": [
+        [
+          {
+            "node": "LOG If: Should Continue Iteration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG If: Should Continue Iteration": {
+      "main": [
+        [
+          {
+            "node": "LOG Wait: Batch Processing Delay 10 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LOG: Resume At Scheduled Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH Response: Send Scheduled Launch Time": {
+      "main": [
+        [
+          {
+            "node": "LOG Workflow: Execute Sync Medias Influenceur",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WH Trigger : Auto Relaunch": {
+      "main": [
+        [
+          {
+            "node": "DB N8N: Fetch Global Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger: Workflow Execute": {
+      "main": [
+        [
+          {
+            "node": "DB N8N: Fetch Global Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG Wait: Batch Processing Delay 10 Seconds": {
+      "main": [
+        [
+          {
+            "node": "LOG Workflow: Execute Sync Medias Influenceur",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JS: Calculate Resume Time": {
+      "main": [
+        [
+          {
+            "node": "WH Response: Send Scheduled Launch Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API: Get Scheduled Info": {
+      "main": [
+        [
+          {
+            "node": "LOG: Brief Delay 3 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Brief Delay 3 Seconds": {
+      "main": [
+        [
+          {
+            "node": "LOG: Split Channels Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Resume At Scheduled Time": {
+      "main": [
+        [
+          {
+            "node": "API Orchestrator: Trigger Production",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Split Channels Loop": {
+      "main": [
+        [
+          {
+            "node": "JS: Calculate Resume Time",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "API: Get Scheduled Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedPerExecution": 10,
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "TG-Auto"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 ---
 title: "Telegram Content Automation Pipeline"
 tagline: "I was hired to manage this by hand. I automated everything instead."
-description: "5h of daily manual content work → 15 min. Built a full pipeline: Whisper transcription, Claude generation with structured outputs, custom HTML parser I invented for Telegram premium emojis, Telethon delivery — fully orchestrated on a VPS."
+description: "5h of daily manual content work → 15 min. Built a full pipeline: Whisper transcription, Claude generation with structured outputs, custom HTML parser I invented for Telegram premium emojis, Telethon delivery - fully orchestrated on a VPS."
 tech:
     [
         "n8n",
@@ -17,6 +17,8 @@ github: "https://github.com/JordGasp/TG-Auto-Backend"
 featured: true
 order: 1
 ---
+
+import WorkflowViewer from "../../../components/WorkflowViewer.astro";
 
 ## Overview
 
@@ -48,25 +50,36 @@ REST gateway that abstracts Telegram API complexity and handles:
 
 4-workflow system with self-healing capabilities:
 
-**WF0 — Auto Relaunch**
+**WF0 - Auto Relaunch**
+
+<WorkflowViewer src='/workflows/TG-Auto/Auto-Relaunch.json' height='300px' />
 
 - Computes next execution time from scheduling queue
 - Loops media sync until 1h before target
 - Triggers orchestrator at optimal time
 
-**WF1 — Orchestrator**
+**WF1 - Orchestrator**
 
-- Health check with exponential retry (up to 15 attempts)
+<WorkflowViewer src='/workflows/TG-Auto/Orchestrator.json' height='300px' />
+
+- Health check with exponential retry (up to 5 attempts)
 - SSH Docker restart on failure
 - Batches channels and dispatches processing
 
-**WF2 — Sync Media Library**
+**WF2 - Sync Medias Library**
+
+<WorkflowViewer
+	src='/workflows/TG-Auto/Sync-Medias-Library.json'
+	height='300px'
+/>
 
 - Incrementally syncs reusable media from source channels
 - Batch transcription via Whisper
 - Claude Haiku auto-tagging for semantic metadata extraction
 
-**WF3 — Process Channel** (Core Pipeline)
+**WF3 - Process Channel** (Core Pipeline)
+
+<WorkflowViewer src='/workflows/TG-Auto/Process-Channel.json' height='300px' />
 
 1. Fetch new messages since last processed ID (incremental, replay-safe)
 2. Parse and segment into logical content groups
@@ -82,7 +95,7 @@ REST gateway that abstracts Telegram API complexity and handles:
 
 ### Async/Sync Bridge
 
-Flask is synchronous (Waitress, `threads=1`). Telethon requires asyncio. The naive solution—`asyncio.run()` per request—would create/destroy event loops constantly, causing race conditions.
+Flask is synchronous (Waitress, `threads=1`). Telethon requires asyncio. The naive solution - `asyncio.run()` per request - would create/destroy event loops constantly, causing race conditions.
 
 **Solution:** A single asyncio event loop runs in a dedicated daemon thread. All Flask routes submit coroutines via `asyncio.run_coroutine_threadsafe()` and block with `.result(timeout=3600)`.
 
