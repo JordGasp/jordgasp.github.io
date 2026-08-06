@@ -40,7 +40,7 @@ The script provides a complete lifecycle management solution: from Docker daemon
 ### Start / Stop Management
 
 - **Automatic Docker Desktop launch** if not running
-- **Daemon readiness polling** with timeout (30s max)
+- **Daemon readiness polling** with timeout (90s max)
 - **Health check wait** via `/healthz` endpoint before browser launch
 - **Stabilization delay** after healthy response (5s)
 
@@ -50,7 +50,7 @@ The script provides a complete lifecycle management solution: from Docker daemon
 - **GitHub changelog diff** with breaking change detection
 - **Pre-update backup** automatically created before applying updates
 - **Selective update** with user confirmation (skipped in AutoStart mode)
-- **Version comparison** between old and new images
+- **Digest-based update detection**: compares the local image against what Docker Hub actually publishes under `:latest` (via the Docker Hub API) before downloading anything - avoids false positives from GitHub releases that haven't been pushed to Docker Hub yet
 
 ### Backup & Restore
 
@@ -87,7 +87,7 @@ n8n/
 │   ├── docker/
 │   │   ├── docker-compose.yml   # n8n container definition
 │   │   └── .env                 # single source of truth
-│   └── n8n-control.ps1          # management script (721 lines)
+│   └── n8n-control.ps1          # management script (860 lines)
 ├── data/                        # n8n persistent data (Docker volume)
 ├── n8n-files/                   # binary file storage
 ├── logs/                        # n8n log output
@@ -100,17 +100,21 @@ The script reads all paths, ports, and settings from `.env` at startup and expos
 
 ### Automatic Update with Changelog Analysis
 
-On each start, the script pulls the latest `n8nio/n8n` image and compares image IDs. If a new version is detected:
+On each interactive start, the script checks whether Docker Hub's `n8nio/n8n:latest` tag actually points to a different image than what's cached locally - **before downloading anything**:
 
-1. **Fetch GitHub releases** via REST API
-2. **Parse changelog** for the last 10 releases
-3. **Detect breaking changes** using regex pattern matching:
+1. **Query the Docker Hub registry API** for the `:latest` tag's manifest digest (a small metadata call, no image layers transferred)
+2. **Compare against the local image's digest** (`docker inspect ... RepoDigests`)
+3. If they match, start immediately - nothing to do
+4. If they differ, **fetch GitHub releases** via REST API for changelog context (informational only - GitHub tags can lag behind what's actually published to Docker Hub, so it's never used to *decide* whether an update exists)
+5. **Detect breaking changes** using regex pattern matching:
     - Keywords: `breaking`, `removed`, `deprecated`, `migration`, `incompatible`
-4. **Display warnings** if breaking changes are found
-5. **Show changelog overview** (first 15 lines)
-6. **Prompt user** for confirmation (or skip in AutoStart mode)
-7. **Create safety backup** before applying update
-8. **Force recreate container** with new image
+6. **Display warnings** if breaking changes are found, plus a changelog overview
+7. **Prompt user** for confirmation (skipped entirely in `-AutoStart` mode, which never applies updates unattended)
+8. **Create a safety backup** - reused automatically if the scheduled auto-backup already ran earlier in the same start, to avoid backing up twice
+9. **Pull the image and check the exit code** - if the download fails, the update is aborted instead of silently recreating the container with the unchanged old image
+10. **Force recreate container**, then **re-read the actual running version** to confirm and report what's really installed
+
+This design replaced an earlier version that pulled first and diffed local image IDs, which could falsely report an update as applied when the download had failed, or loop on a version GitHub had tagged but Docker Hub hadn't published yet.
 
 ### Backup Rotation Strategy
 
@@ -171,12 +175,13 @@ The restore process includes multiple safety checks:
 1. **List available backups** sorted by date (newest first)
 2. **User selection** with bounds checking
 3. **Confirmation prompt** warning about data loss
-4. **Container stop** before extraction
-5. **Temporary extraction** to `_restore_temp` directory
-6. **Validation** of extracted structure (must contain `data/` folder)
-7. **Atomic swap** of data directory
-8. **Cleanup** of temporary files
-9. **Container restart** with status verification
+4. **Safety backup of the current data** taken automatically first, so a bad restore or an accidental wrong pick can't destroy the current state
+5. **Container stop** before extraction
+6. **Temporary extraction** to `_restore_temp` directory
+7. **Validation** of extracted structure (the data folder is detected by name from the configured path, not hardcoded)
+8. **Atomic swap** of data directory
+9. **Cleanup** of temporary files
+10. **Container restart** with status verification
 
 ## Configuration Options
 
@@ -195,6 +200,7 @@ All settings in `.env`:
 | `N8N_BLOCK_FS_WRITE_ACCESS`        | `false`                 | Block filesystem write access           |
 | `N8N_LOG_FILE_MAX_SIZE`            | `20`                    | Max log file size (MB)                  |
 | `N8N_LOG_FILE_MAX_COUNT`           | `7`                     | Max log file count                      |
+| `PS1_CONTAINER_NAME`               | `n8n-docker`            | Container name (shared with compose)    |
 
 ## Requirements
 
@@ -204,7 +210,7 @@ All settings in `.env`:
 
 ## Tech Stack
 
-**Language:** PowerShell 7.x
+**Language:** PowerShell 5.1+
 
 **Containerization:** Docker · Docker Compose
 
